@@ -1,0 +1,4 @@
+__workspace/*
+!__workspace/.keep
+
+.devcontainer/.env

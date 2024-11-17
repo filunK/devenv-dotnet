@@ -1,0 +1,71 @@
+ARG DEBIAN_VERSION=12.7
+
+FROM debian:${DEBIAN_VERSION}
+
+ARG USERNAME
+ARG USER_UID
+ARG USER_GID
+ARG DOTNET_VERSION=8.0.404
+
+# Setup
+RUN set -x \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+    locales \
+    git \
+    nano \
+    man-db \
+    manpages \
+    curl \
+    wget \
+    zip \
+    unzip \
+    apt-transport-https \
+    ca-certificates \
+    build-essential \
+    libc6 \
+    libgcc-s1 \
+    libgssapi-krb5-2 \
+    libicu72 \
+    libssl3 \
+    libstdc++6 \
+    zlib1g \
+    # ロケールセットアップ
+    && sed -i -E 's/# (ja_JP.UTF-8)/\1/' /etc/locale.gen \
+    && locale-gen \
+    # 不要パッケージ削除・クリーン
+    && apt-get clean \
+    && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN set -x \
+    && mkdir -p /usr/local/dotnet \
+    && wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh \
+    && chmod +x ./dotnet-install.sh \
+    && ./dotnet-install.sh \
+    --version ${DOTNET_VERSION} \
+    -InstallDir /usr/local/dotnet \
+    && rm -f dotnet-install.sh
+
+ENV DOTNET_ROOT=/usr/local/dotnet
+ENV PATH=${DOTNET_ROOT}:${DOTNET_ROOT}/tools:${PATH}
+
+# ユーザセットアップ
+RUN set -x \
+    && groupadd --gid "${USER_GID}" "${USERNAME}"\
+    && useradd \
+    --uid "${USER_UID}" \
+    --gid "${USER_GID}" \
+    -m "${USERNAME}" \
+    -d "/home/${USERNAME}" \
+    -s /bin/bash \
+    && mkdir -p /workspace \
+    && chown ${USERNAME}:${USERNAME} /workspace
+
+USER "${USERNAME}"
+WORKDIR /workspace
+
+ENV TZ=Azia/Tokyo
+ENV LANG=ja_JP.UTF-8
+
+ENTRYPOINT [ "sleep", "infinity" ]

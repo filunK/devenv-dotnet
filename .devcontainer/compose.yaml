@@ -1,0 +1,27 @@
+networks:
+  base:
+    driver: bridge
+    # ipam:
+    #   config:
+    #     # - subnet: 172.21.100.0/27
+
+# volumes:
+
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: Containerfile
+      args:
+        - USERNAME=${DEVCONTAINER__APP__USERNAME}
+        - USER_UID=${DEVCONTAINER__APP__USERID}
+        - USER_GID=${DEVCONTAINER__APP__USERID}
+    restart: always
+    tty: true
+    stdin_open: true
+    volumes:
+      - ../__workspace:/workspace:cache
+    networks:
+      - base
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
